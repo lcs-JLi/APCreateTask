@@ -3,7 +3,7 @@ import SwiftUI
 struct AdventureView: View {
     @Environment(\.dismiss) private var dismiss
 
-    private static let questionsPerRun = 8
+    private static let questionsPerRun = 10
 
     let appearance: AvatarAppearance
     @Binding var history: [GameRun]
@@ -11,9 +11,15 @@ struct AdventureView: View {
     @State private var questionIndex = 0
     @State private var selectedAnswer: Int?
     @State private var score = 0
+    @State private var botScore = 0
     @State private var correctCount = 0
     @State private var streak = 0
     @State private var lastPointsEarned = 0
+    @State private var lastStreakBonus = 0
+    @State private var notebookProtectionUsed = false
+    @State private var notebookSavedStreak = false
+    @State private var botAnswer: Int?
+    @State private var botAppearance = AvatarAppearance.random
     @State private var hasFinished = false
     @State private var questions = Self.makeQuestionSet()
     @State private var answerResults: [GameQuestionResult] = []
@@ -38,17 +44,13 @@ struct AdventureView: View {
             )
             .ignoresSafeArea()
 
-            ZStack(alignment: .bottomLeading) {
+            ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 20) {
                         gameHeader
 
                         if hasFinished {
-                            if correctCount == questions.count {
-                                victoryCard
-                            } else {
-                                resultsCard
-                            }
+                            outcomeCard
                         } else {
                             questionCard
                             answerChoices
@@ -94,6 +96,11 @@ struct AdventureView: View {
                         .font(.system(size: 16, weight: .heavy, design: .rounded))
                         .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
                         .accessibilityLabel("Score: \(score) points")
+
+                    Label("\(botScore)", systemImage: "person.fill")
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Color(red: 0.30, green: 0.43, blue: 0.63))
+                        .accessibilityLabel("Opponent score: \(botScore) points")
                 }
                 .padding(.horizontal, 13)
                 .padding(.vertical, 9)
@@ -115,40 +122,97 @@ struct AdventureView: View {
     }
 
     private var runFooter: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            AvatarPreview(appearance: appearance)
-                .frame(width: 140, height: 145)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Your avatar")
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("SCORE")
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.secondary)
-
-                Label("\(score) points", systemImage: "star.fill")
-                    .font(.system(size: 18, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
-
-                Label("\(streak) streak", systemImage: "flame.fill")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.70, green: 0.35, blue: 0.12))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 20))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20)
-                    .strokeBorder(.white, lineWidth: 2)
-            }
-            .padding(.bottom, 12)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Score \(score) points. Streak \(streak).")
+        HStack(alignment: .bottom, spacing: 0) {
+            playerRunBadge
+            Spacer(minLength: 8)
+            botRunBadge
         }
-        .frame(maxWidth: 560, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
-        .allowsHitTesting(false)
+        .background {
+            LinearGradient(
+                colors: [.clear, Color(red: 0.95, green: 0.97, blue: 0.92).opacity(0.96)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private var playerRunBadge: some View {
+        runBadge(
+            name: "YOU",
+            avatar: appearance,
+            score: score,
+            detail: "\(streak) streak",
+            detailSymbol: "flame.fill",
+            detailColor: Color(red: 0.70, green: 0.35, blue: 0.12),
+            answer: nil
+        )
+    }
+
+    private var botRunBadge: some View {
+        runBadge(
+            name: "OPPONENT",
+            avatar: botAppearance,
+            score: botScore,
+            detail: botAnswer.map { "Picked \($0)" } ?? "Ready",
+            detailSymbol: botAnswer == currentQuestion.correctAnswer ? "checkmark.circle.fill" : "sparkles",
+            detailColor: botAnswer == currentQuestion.correctAnswer
+                ? Color(red: 0.16, green: 0.45, blue: 0.32)
+                : Color(red: 0.30, green: 0.43, blue: 0.63),
+            answer: botAnswer
+        )
+    }
+
+    private func runBadge(
+        name: String,
+        avatar: AvatarAppearance,
+        score: Int,
+        detail: String,
+        detailSymbol: String,
+        detailColor: Color,
+        answer: Int?
+    ) -> some View {
+        VStack(spacing: 1) {
+            Text(name)
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+
+            AvatarPreview(appearance: avatar)
+                .frame(width: 152, height: 152)
+                .scaleEffect(0.72)
+                .frame(width: 110, height: 110)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(name == "YOU" ? "Your avatar" : "Opponent avatar")
+
+            Label("\(score) pts", systemImage: "star.fill")
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .foregroundStyle(name == "YOU"
+                                 ? Color(red: 0.55, green: 0.40, blue: 0.09)
+                                 : Color(red: 0.30, green: 0.43, blue: 0.63))
+
+            Label(detail, systemImage: detailSymbol)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(detailColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(minWidth: 120)
+        .background(.white.opacity(0.94), in: RoundedRectangle(cornerRadius: 20))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(.white, lineWidth: 2)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            name == "YOU"
+                ? "You, \(score) points, \(streak) correct answers in a row."
+                : "Opponent, \(score) points, \(answer.map { "answered \($0)" } ?? "waiting to answer")."
+        )
     }
 
     private var questionCard: some View {
@@ -225,6 +289,24 @@ struct AdventureView: View {
             Text(currentQuestion.explanation)
                 .font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(Color(red: 0.27, green: 0.35, blue: 0.34))
+
+            if isCorrect {
+                Label("Streak bonus: +\(lastStreakBonus) points", systemImage: "flame.fill")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.70, green: 0.35, blue: 0.12))
+            }
+
+            if isCorrect && appearance.equippedEquipment.contains(.pen) {
+                Label("Regular pen bonus: +1 point!", systemImage: "pencil")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+            }
+
+            if notebookSavedStreak {
+                Label("Notebook saved your streak! It stays at \(streak).", systemImage: "book.fill")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -250,29 +332,15 @@ struct AdventureView: View {
         .buttonStyle(.plain)
     }
 
-    private var victoryCard: some View {
+    private var outcomeCard: some View {
         VStack(spacing: 18) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1.00, green: 0.77, blue: 0.29),
-                                Color(red: 0.95, green: 0.52, blue: 0.20)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(outcome.accentColor.gradient)
 
-                Image(systemName: "trophy.fill")
+                Image(systemName: outcome.symbol)
                     .font(.system(size: 42, weight: .bold))
                     .foregroundStyle(.white)
-
-                Image(systemName: "sparkles")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(Color(red: 0.97, green: 0.63, blue: 0.17))
-                    .offset(x: 42, y: -34)
             }
             .frame(width: 96, height: 96)
             .accessibilityHidden(true)
@@ -281,24 +349,33 @@ struct AdventureView: View {
                 .frame(height: 145)
                 .accessibilityHidden(true)
 
-            Text("You did it!")
+            Text(outcome.title)
                 .font(.system(size: 32, weight: .heavy, design: .rounded))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                .foregroundStyle(outcome.accentColor)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Perfect score!")
-                .font(.system(size: 22, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
-
-            Text("You answered all \(questions.count) questions correctly!")
+            Text(outcome.message(
+                totalQuestions: questions.count,
+                scoreDifference: score - botScore,
+                userScore: score
+            ))
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
 
-            Text("\(score) points")
-                .font(.system(size: 18, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
+            Text("Correct answers: \(correctCount) of \(questions.count)")
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
+
+            HStack(spacing: 24) {
+                Label("You: \(score)", systemImage: "star.fill")
+                    .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
+                Label("Opponent: \(botScore)", systemImage: "person.fill")
+                    .foregroundStyle(Color(red: 0.30, green: 0.43, blue: 0.63))
+            }
+            .font(.system(size: 16, weight: .heavy, design: .rounded))
+            .multilineTextAlignment(.center)
 
             resultActions
         }
@@ -307,38 +384,23 @@ struct AdventureView: View {
         .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 30))
         .overlay {
             RoundedRectangle(cornerRadius: 30)
-                .strokeBorder(Color(red: 1.00, green: 0.79, blue: 0.38).opacity(0.7), lineWidth: 3)
+                .strokeBorder(outcome.accentColor.opacity(0.45), lineWidth: 3)
         }
-        .shadow(color: Color(red: 0.75, green: 0.49, blue: 0.12).opacity(0.16), radius: 16, y: 8)
+        .shadow(color: outcome.accentColor.opacity(0.16), radius: 16, y: 8)
     }
 
-    private var resultsCard: some View {
-        VStack(spacing: 18) {
-            AvatarPreview(appearance: appearance)
-                .frame(height: 165)
-                .accessibilityHidden(true)
-
-            Text(resultTitle)
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
-                .accessibilityAddTraits(.isHeader)
-
-            Text("You got \(correctCount) out of \(questions.count) questions right!")
-                .font(.system(size: 19, weight: .bold, design: .rounded))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
-
-            Text("\(score) points")
-                .font(.system(size: 18, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
-
-            resultActions
+    private var outcome: RunOutcome {
+        let scoreDifference = score - botScore
+        if scoreDifference == 0 {
+            return .overtime
         }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .background(.white.opacity(0.94), in: RoundedRectangle(cornerRadius: 30))
-        .shadow(color: Color(red: 0.33, green: 0.43, blue: 0.37).opacity(0.08), radius: 12, y: 6)
+        if scoreDifference < 0 {
+            return .defeat
+        }
+        if correctCount == questions.count {
+            return .flawlessVictory
+        }
+        return scoreDifference <= 5 ? .clutch : .victory
     }
 
     private var resultActions: some View {
@@ -362,26 +424,34 @@ struct AdventureView: View {
         }
     }
 
-    private var resultTitle: String {
-        switch correctCount {
-        case questions.count: "Perfect score!"
-        case (questions.count / 2)...: "Amazing work!"
-        default: "Keep practicing!"
-        }
-    }
-
     private func submitAnswer(_ answer: Int) {
         guard selectedAnswer == nil else { return }
 
         selectedAnswer = answer
+        notebookSavedStreak = false
+        lastStreakBonus = 0
         if answer == currentQuestion.correctAnswer {
             streak += 1
-            lastPointsEarned = streak > 3 ? 5 + (streak - 3) : 5
+            let streakBonus = max(0, streak - 3)
+            let penBonus = appearance.equippedEquipment.contains(.pen) ? 1 : 0
+            lastStreakBonus = streakBonus
+            lastPointsEarned = 5 + streakBonus + penBonus
             score += lastPointsEarned
             correctCount += 1
         } else {
-            streak = 0
             lastPointsEarned = 0
+            if streak > 0,
+               appearance.equippedEquipment.contains(.notebook),
+               !notebookProtectionUsed {
+                notebookProtectionUsed = true
+                notebookSavedStreak = true
+            } else {
+                streak = 0
+            }
+        }
+        botAnswer = currentQuestion.options.randomElement()
+        if let botAnswer, botAnswer == currentQuestion.correctAnswer {
+            botScore += 5
         }
         answerResults.append(
             GameQuestionResult(question: currentQuestion, selectedAnswer: answer)
@@ -392,11 +462,13 @@ struct AdventureView: View {
         guard selectedAnswer != nil else { return }
 
         if questionIndex == questions.count - 1 {
-            history.append(GameRun(answers: answerResults))
+            history.append(GameRun(answers: answerResults, score: score))
             hasFinished = true
         } else {
             questionIndex += 1
             selectedAnswer = nil
+            notebookSavedStreak = false
+            botAnswer = nil
         }
     }
 
@@ -405,9 +477,15 @@ struct AdventureView: View {
         questionIndex = 0
         selectedAnswer = nil
         score = 0
+        botScore = 0
         correctCount = 0
         streak = 0
         lastPointsEarned = 0
+        lastStreakBonus = 0
+        notebookProtectionUsed = false
+        notebookSavedStreak = false
+        botAnswer = nil
+        botAppearance = .random
         hasFinished = false
         answerResults = []
     }
@@ -456,6 +534,63 @@ struct AdventureView: View {
         if answer == currentQuestion.correctAnswer { return "Correct answer" }
         if answer == selectedAnswer { return "Your answer, incorrect" }
         return ""
+    }
+
+    private enum RunOutcome {
+        case flawlessVictory
+        case clutch
+        case victory
+        case overtime
+        case defeat
+
+        var title: String {
+            switch self {
+            case .flawlessVictory: "Flawless Victory"
+            case .clutch: "Clutch"
+            case .victory: "Victory"
+            case .overtime: "Overtime"
+            case .defeat: "Defeat"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .flawlessVictory: "sparkles"
+            case .clutch: "bolt.fill"
+            case .victory: "trophy.fill"
+            case .overtime: "equal.circle.fill"
+            case .defeat: "xmark.circle.fill"
+            }
+        }
+
+        var accentColor: Color {
+            switch self {
+            case .flawlessVictory: Color(red: 0.75, green: 0.49, blue: 0.12)
+            case .clutch: Color(red: 0.77, green: 0.38, blue: 0.16)
+            case .victory: Color(red: 0.20, green: 0.48, blue: 0.35)
+            case .overtime: Color(red: 0.30, green: 0.43, blue: 0.63)
+            case .defeat: Color(red: 0.62, green: 0.30, blue: 0.30)
+            }
+        }
+
+        func message(
+            totalQuestions: Int,
+            scoreDifference: Int,
+            userScore: Int
+        ) -> String {
+            switch self {
+            case .flawlessVictory:
+                "All \(totalQuestions) answers correct! You beat your opponent."
+            case .clutch:
+                "A close win—you won by \(scoreDifference) \(scoreDifference == 1 ? "point" : "points")!"
+            case .victory:
+                "You won by \(scoreDifference) points!"
+            case .overtime:
+                "It's a tie at \(userScore) points!"
+            case .defeat:
+                "Your opponent won this round. Try again!"
+            }
+        }
     }
 }
 

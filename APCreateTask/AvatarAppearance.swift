@@ -98,6 +98,13 @@ struct AvatarAppearance {
             }
         }
 
+        var effectDescription: String {
+            switch self {
+            case .pen: "Earn 1 extra point for each correct answer."
+            case .notebook: "Protect your current streak from one incorrect answer per run."
+            }
+        }
+
         var symbol: String {
             switch self {
             case .pen: "🖊️"
@@ -110,4 +117,13 @@ struct AvatarAppearance {
     var hairstyle: Hairstyle = .curls
     var outfit: Outfit = .tee
     var equippedEquipment: Set<Equipment> = []
+
+    static var random: Self {
+        Self(
+            skinTone: SkinTone.allCases.randomElement() ?? .golden,
+            hairstyle: Hairstyle.allCases.randomElement() ?? .curls,
+            outfit: Outfit.allCases.randomElement() ?? .tee,
+            equippedEquipment: Set(Equipment.allCases.filter { _ in Bool.random() })
+        )
+    }
 }

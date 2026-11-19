@@ -17,12 +17,36 @@ struct GameRun: Identifiable, Codable, Equatable {
     let id: UUID
     let completedAt: Date
     let answers: [GameQuestionResult]
+    let score: Int
 
     var correctCount: Int {
         answers.filter(\.isCorrect).count
     }
 
-    var score: Int {
+    init(answers: [GameQuestionResult], score: Int? = nil, completedAt: Date = .now) {
+        id = UUID()
+        self.completedAt = completedAt
+        self.answers = answers
+        self.score = score ?? Self.calculatedScore(for: answers)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case completedAt
+        case answers
+        case score
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        completedAt = try container.decode(Date.self, forKey: .completedAt)
+        answers = try container.decode([GameQuestionResult].self, forKey: .answers)
+        score = try container.decodeIfPresent(Int.self, forKey: .score)
+            ?? Self.calculatedScore(for: answers)
+    }
+
+    private static func calculatedScore(for answers: [GameQuestionResult]) -> Int {
         var streak = 0
         var total = 0
 
@@ -36,11 +60,5 @@ struct GameRun: Identifiable, Codable, Equatable {
         }
 
         return total
-    }
-
-    init(answers: [GameQuestionResult], completedAt: Date = .now) {
-        id = UUID()
-        self.completedAt = completedAt
-        self.answers = answers
     }
 }

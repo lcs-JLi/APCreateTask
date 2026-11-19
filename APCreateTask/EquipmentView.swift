@@ -97,6 +97,11 @@ struct EquipmentView: View {
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
 
+                Text(item.effectDescription)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
                 Text(isEquipped ? "Equipped" : "Tap to equip")
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(
@@ -105,7 +110,7 @@ struct EquipmentView: View {
                             : Color.secondary
                     )
             }
-            .frame(maxWidth: .infinity, minHeight: 116)
+            .frame(maxWidth: .infinity, minHeight: 142)
             .background(
                 isEquipped ? Color(red: 0.87, green: 0.96, blue: 0.92) : .white.opacity(0.94),
                 in: RoundedRectangle(cornerRadius: 20)
@@ -119,7 +124,7 @@ struct EquipmentView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(item.name)
+        .accessibilityLabel("\(item.name). \(item.effectDescription)")
         .accessibilityValue(isEquipped ? "Equipped" : "Not equipped")
         .accessibilityHint("Toggle this item for your avatar")
     }
