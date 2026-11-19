@@ -5,6 +5,7 @@ struct GameMenuView: View {
     @Binding var history: [GameRun]
     @Binding var level: Int
     @Binding var experience: Double
+    @State private var showsResetConfirmation = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -92,6 +93,18 @@ struct GameMenuView: View {
                             }
                             .buttonStyle(.plain)
 
+                            Button {
+                                showsResetConfirmation = true
+                            } label: {
+                                menuButtonLabel(
+                                    "RESET PROFILE",
+                                    systemImage: "arrow.counterclockwise",
+                                    color: Color(red: 0.67, green: 0.34, blue: 0.30)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("Reset your username, experience, and level")
+
                             Button {} label: {
                                 menuButtonLabel(
                                     "EXIT",
@@ -110,6 +123,20 @@ struct GameMenuView: View {
                     .padding(.bottom, 24)
                 }
             }
+        }
+        .confirmationDialog(
+            "Reset your profile?",
+            isPresented: $showsResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Reset profile", role: .destructive) {
+                appearance.username = ""
+                experience = 0
+                level = 1
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This clears your username and resets your experience and level.")
         }
     }
 

@@ -623,13 +623,12 @@ struct AdventureView: View {
         let flawlessBonus = outcome == .flawlessVictory ? 50.0 : 0
         experienceEarnedThisRun = Double(score) * 0.5 + flawlessBonus
 
-        let accumulatedExperience = experience + experienceEarnedThisRun
-        if accumulatedExperience >= 100 {
-            level += Int(accumulatedExperience / 100)
-            experience = 0
-        } else {
-            experience = accumulatedExperience
+        var accumulatedExperience = experience + experienceEarnedThisRun
+        while accumulatedExperience >= 100 {
+            level += 1
+            accumulatedExperience -= 100
         }
+        experience = accumulatedExperience
     }
 
     private func restartGame() {
