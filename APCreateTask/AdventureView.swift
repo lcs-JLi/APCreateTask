@@ -1,12 +1,32 @@
 import SwiftUI
 
 struct AdventureView: View {
-    @Environment(\.dismiss) private var dismiss
-
     private static let questionsPerRun = 10
+    private static let questionsPerEventInterval = 4
+    private static let events: [AdventureEvent] = [
+        AdventureEvent(
+            id: "mystery-chest",
+            name: "A mystery chest",
+            prompt: "You found a mystery chest along your way.",
+            choices: [
+                .init(title: "Open the chest", detail: "Gain 15 points", effect: .addPoints(15)),
+                .init(title: "Leave it alone", detail: "Nothing happens", effect: .none)
+            ]
+        ),
+        AdventureEvent(
+            id: "ancient-textbook",
+            name: "An ancient textbook",
+            prompt: "You found an ancient textbook under a pile of leaves.",
+            choices: [
+                .init(title: "Read", detail: "Add 3 extra questions to the run", effect: .addQuestions(3)),
+                .init(title: "Leave it alone", detail: "Nothing happens", effect: .none)
+            ]
+        )
+    ]
 
     let appearance: AvatarAppearance
     @Binding var history: [GameRun]
+    @Binding var navigationPath: [AppRoute]
 
     @State private var questionIndex = 0
     @State private var selectedAnswer: Int?
@@ -18,6 +38,9 @@ struct AdventureView: View {
     @State private var lastStreakBonus = 0
     @State private var notebookProtectionUsed = false
     @State private var notebookSavedStreak = false
+    @State private var activeEvent: AdventureEvent?
+    @State private var eventResult: String?
+    @State private var usedEventIDs: Set<String> = []
     @State private var botAnswer: Int?
     @State private var botAppearance = AvatarAppearance.random
     @State private var hasFinished = false
@@ -49,7 +72,9 @@ struct AdventureView: View {
                     VStack(spacing: 20) {
                         gameHeader
 
-                        if hasFinished {
+                        if let activeEvent {
+                            eventCard(activeEvent)
+                        } else if hasFinished {
                             outcomeCard
                         } else {
                             questionCard
@@ -143,6 +168,7 @@ struct AdventureView: View {
     private var playerRunBadge: some View {
         runBadge(
             name: "YOU",
+            username: appearance.displayUsername,
             avatar: appearance,
             score: score,
             detail: "\(streak) streak",
@@ -168,6 +194,7 @@ struct AdventureView: View {
 
     private func runBadge(
         name: String,
+        username: String? = nil,
         avatar: AvatarAppearance,
         score: Int,
         detail: String,
@@ -175,10 +202,14 @@ struct AdventureView: View {
         detailColor: Color,
         answer: Int?
     ) -> some View {
-        VStack(spacing: 1) {
-            Text(name)
+        let displayName = name == "YOU" ? username ?? name : name
+
+        return VStack(spacing: 1) {
+            Text(displayName)
                 .font(.system(size: 12, weight: .heavy, design: .rounded))
                 .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             AvatarPreview(appearance: avatar)
                 .frame(width: 152, height: 152)
@@ -210,9 +241,66 @@ struct AdventureView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             name == "YOU"
-                ? "You, \(score) points, \(streak) correct answers in a row."
+                ? "\(displayName), \(score) points, \(streak) correct answers in a row."
                 : "Opponent, \(score) points, \(answer.map { "answered \($0)" } ?? "waiting to answer")."
         )
+    }
+
+    private func eventCard(_ event: AdventureEvent) -> some View {
+        VStack(spacing: 18) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 36, weight: .bold))
+                .foregroundStyle(Color(red: 0.75, green: 0.49, blue: 0.12))
+                .accessibilityHidden(true)
+
+            Text(event.name)
+                .font(.system(size: 28, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+
+            Text(event.prompt)
+                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
+                .multilineTextAlignment(.center)
+
+            if let eventResult {
+                Label(eventResult, systemImage: "checkmark.circle.fill")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+                    .multilineTextAlignment(.center)
+
+                Button("Continue", action: continueAfterEvent)
+                    .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color(red: 0.20, green: 0.48, blue: 0.45), in: Capsule())
+                    .buttonStyle(.plain)
+            } else {
+                ForEach(event.choices) { choice in
+                    Button {
+                        chooseEventChoice(choice, for: event)
+                    } label: {
+                        VStack(spacing: 5) {
+                            Text(choice.title)
+                                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                            Text(choice.detail)
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                        }
+                        .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 18))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(.white.opacity(0.95), in: RoundedRectangle(cornerRadius: 28))
+        .shadow(color: Color(red: 0.33, green: 0.43, blue: 0.37).opacity(0.08), radius: 12, y: 6)
     }
 
     private var questionCard: some View {
@@ -416,7 +504,7 @@ struct AdventureView: View {
             .buttonStyle(.plain)
 
             Button("Back to menu") {
-                dismiss()
+                navigationPath = [.gameMenu]
             }
             .font(.system(size: 16, weight: .bold, design: .rounded))
             .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
@@ -461,6 +549,51 @@ struct AdventureView: View {
     private func moveToNextQuestion() {
         guard selectedAnswer != nil else { return }
 
+        let questionsAnswered = questionIndex + 1
+        if questionsAnswered.isMultiple(of: Self.questionsPerEventInterval) {
+            let unusedEvents = Self.events.filter { !usedEventIDs.contains($0.id) }
+            if let event = unusedEvents.randomElement() {
+                activeEvent = event
+                return
+            }
+        }
+
+        advanceToNextQuestion()
+    }
+
+    private func chooseEventChoice(_ choice: AdventureEvent.Choice, for event: AdventureEvent) {
+        guard activeEvent?.id == event.id, eventResult == nil else { return }
+
+        switch choice.effect {
+        case .addPoints(let points):
+            score += points
+            eventResult = "You gained \(points) points!"
+        case .addQuestions(let count):
+            let usedQuestionIDs = Set(questions.map(\.id))
+            let additionalQuestions = MathQuestionBank.questions
+                .filter { !usedQuestionIDs.contains($0.id) }
+                .shuffled()
+                .prefix(count)
+            let questionsToAdd = Array(additionalQuestions)
+            questions.append(contentsOf: questionsToAdd)
+            eventResult = questionsToAdd.count == count
+                ? "Added \(count) extra questions to your run."
+                : "Added \(questionsToAdd.count) extra questions to your run."
+        case .none:
+            eventResult = "You left it alone. Nothing happens."
+        }
+    }
+
+    private func continueAfterEvent() {
+        guard let event = activeEvent, eventResult != nil else { return }
+
+        usedEventIDs.insert(event.id)
+        activeEvent = nil
+        eventResult = nil
+        advanceToNextQuestion()
+    }
+
+    private func advanceToNextQuestion() {
         if questionIndex == questions.count - 1 {
             history.append(GameRun(answers: answerResults, score: score))
             hasFinished = true
@@ -484,6 +617,9 @@ struct AdventureView: View {
         lastStreakBonus = 0
         notebookProtectionUsed = false
         notebookSavedStreak = false
+        activeEvent = nil
+        eventResult = nil
+        usedEventIDs = []
         botAnswer = nil
         botAppearance = .random
         hasFinished = false
@@ -596,6 +732,10 @@ struct AdventureView: View {
 
 #Preview {
     NavigationStack {
-        AdventureView(appearance: AvatarAppearance(), history: .constant([]))
+        AdventureView(
+            appearance: AvatarAppearance(),
+            history: .constant([]),
+            navigationPath: .constant([])
+        )
     }
 }

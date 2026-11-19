@@ -91,14 +91,28 @@ struct WardrobeView: View {
             AvatarPreview(appearance: appearance)
                 .frame(height: 168)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(
-                    "Your explorer. \(appearance.skinTone.name) skin, " +
-                    "\(appearance.hairstyle.name) hair, \(appearance.outfit.name) outfit."
-                )
+                .accessibilityLabel(avatarAccessibilityDescription)
 
-            Text("Looking great!")
+            Text(appearance.displayUsername ?? "Looking great!")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(red: 0.20, green: 0.39, blue: 0.37))
+
+            TextField("Choose a username", text: $appearance.username)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    Color(red: 0.94, green: 0.96, blue: 0.94),
+                    in: RoundedRectangle(cornerRadius: 14)
+                )
+                .accessibilityLabel("Username")
+
+            Text("Your username will appear with your avatar.")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(18)
         .background(.white.opacity(0.94), in: RoundedRectangle(cornerRadius: 28))
@@ -107,6 +121,15 @@ struct WardrobeView: View {
                 .strokeBorder(.white, lineWidth: 2)
         }
         .shadow(color: Color(red: 0.33, green: 0.43, blue: 0.37).opacity(0.10), radius: 16, y: 8)
+    }
+
+    private var avatarAccessibilityDescription: String {
+        let username = appearance.displayUsername ?? "Explorer"
+        let skinTone = "\(appearance.skinTone.name) skin"
+        let hairstyle = "\(appearance.hairstyle.name) hair"
+        let outfit = "\(appearance.outfit.name) outfit"
+
+        return "Your explorer, \(username). \(skinTone), \(hairstyle), \(outfit)."
     }
 
     private var customizationCard: some View {
@@ -247,9 +270,7 @@ struct WardrobeView: View {
     }
 
     private var startButton: some View {
-        NavigationLink {
-            GameMenuView(appearance: $appearance, history: $history)
-        } label: {
+        NavigationLink(value: AppRoute.gameMenu) {
             HStack(spacing: 10) {
                 Text("Continue")
                 Image(systemName: "arrow.right")

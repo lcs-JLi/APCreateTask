@@ -36,19 +36,26 @@ struct GameMenuView: View {
                     Spacer(minLength: 20)
 
                     HStack(alignment: .bottom, spacing: 0) {
-                        AvatarPreview(appearance: appearance)
-                            .frame(width: 152, height: 180)
-                            .scaleEffect(avatarScale)
-                            .frame(width: avatarWidth, height: 190, alignment: .bottomLeading)
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(avatarDescription)
+                        VStack(spacing: 2) {
+                            AvatarPreview(appearance: appearance)
+                                .frame(width: 152, height: 180)
+                                .scaleEffect(avatarScale)
+                                .frame(width: avatarWidth, height: 180, alignment: .bottomLeading)
+
+                            Text(appearance.displayUsername ?? "Explorer")
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .frame(width: avatarWidth)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(avatarDescription)
 
                         Spacer(minLength: spacing)
 
                         VStack(spacing: 14) {
-                            NavigationLink {
-                                AdventureView(appearance: appearance, history: $history)
-                            } label: {
+                            NavigationLink(value: AppRoute.subjectSelection) {
                                 menuButtonLabel(
                                     "START",
                                     systemImage: "play.fill",
@@ -107,7 +114,8 @@ struct GameMenuView: View {
             .joined(separator: ", ")
         let equipmentDescription = equipmentNames.isEmpty ? "no equipment" : equipmentNames
 
-        return "Your avatar. \(appearance.skinTone.name) skin, " +
+        return "Your avatar, \(appearance.displayUsername ?? "Explorer"). " +
+            "\(appearance.skinTone.name) skin, " +
             "\(appearance.hairstyle.name) hair, \(appearance.outfit.name) outfit, " +
             "\(equipmentDescription)."
     }

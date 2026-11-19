@@ -117,6 +117,12 @@ struct AvatarAppearance {
     var hairstyle: Hairstyle = .curls
     var outfit: Outfit = .tee
     var equippedEquipment: Set<Equipment> = []
+    var username = ""
+
+    var displayUsername: String? {
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedUsername.isEmpty ? nil : trimmedUsername
+    }
 
     static var random: Self {
         Self(

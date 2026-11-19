@@ -3,11 +3,26 @@ import SwiftUI
 struct ContentView: View {
     @State private var appearance = AvatarAppearance()
     @State private var history: [GameRun] = []
+    @State private var navigationPath: [AppRoute] = []
     @AppStorage("gameHistoryData") private var historyData = Data()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             WardrobeView(appearance: $appearance, history: $history)
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .gameMenu:
+                        GameMenuView(appearance: $appearance, history: $history)
+                    case .subjectSelection:
+                        SubjectSelectionView()
+                    case .adventure:
+                        AdventureView(
+                            appearance: appearance,
+                            history: $history,
+                            navigationPath: $navigationPath
+                        )
+                    }
+                }
         }
         .task {
             guard !historyData.isEmpty else { return }
