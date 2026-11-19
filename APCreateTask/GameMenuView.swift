@@ -3,6 +3,8 @@ import SwiftUI
 struct GameMenuView: View {
     @Binding var appearance: AvatarAppearance
     @Binding var history: [GameRun]
+    @Binding var level: Int
+    @Binding var experience: Double
 
     var body: some View {
         GeometryReader { geometry in
@@ -32,6 +34,10 @@ struct GameMenuView: View {
                         .lineLimit(1)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, 28)
+
+                    ExperienceProgressView(level: level, experience: experience)
+                        .padding(.horizontal, horizontalPadding)
+                        .frame(maxWidth: 560)
 
                     Spacer(minLength: 20)
 
@@ -136,6 +142,11 @@ struct GameMenuView: View {
 
 #Preview {
     NavigationStack {
-        GameMenuView(appearance: .constant(AvatarAppearance()), history: .constant([]))
+        GameMenuView(
+            appearance: .constant(AvatarAppearance()),
+            history: .constant([]),
+            level: .constant(1),
+            experience: .constant(0)
+        )
     }
 }

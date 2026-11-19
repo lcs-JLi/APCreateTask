@@ -27,6 +27,8 @@ struct AdventureView: View {
     let appearance: AvatarAppearance
     @Binding var history: [GameRun]
     @Binding var navigationPath: [AppRoute]
+    @Binding var level: Int
+    @Binding var experience: Double
 
     @State private var questionIndex = 0
     @State private var selectedAnswer: Int?
@@ -44,6 +46,8 @@ struct AdventureView: View {
     @State private var botAnswer: Int?
     @State private var botAppearance = AvatarAppearance.random
     @State private var hasFinished = false
+    @State private var experienceEarnedThisRun = 0.0
+    @State private var experienceAwarded = false
     @State private var questions = Self.makeQuestionSet()
     @State private var answerResults: [GameQuestionResult] = []
 
@@ -465,6 +469,12 @@ struct AdventureView: View {
             .font(.system(size: 16, weight: .heavy, design: .rounded))
             .multilineTextAlignment(.center)
 
+            ExperienceProgressView(
+                level: level,
+                experience: experience,
+                earnedThisRun: experienceEarnedThisRun
+            )
+
             resultActions
         }
         .padding(24)
@@ -596,12 +606,29 @@ struct AdventureView: View {
     private func advanceToNextQuestion() {
         if questionIndex == questions.count - 1 {
             history.append(GameRun(answers: answerResults, score: score))
+            awardExperience()
             hasFinished = true
         } else {
             questionIndex += 1
             selectedAnswer = nil
             notebookSavedStreak = false
             botAnswer = nil
+        }
+    }
+
+    private func awardExperience() {
+        guard !experienceAwarded else { return }
+        experienceAwarded = true
+
+        let flawlessBonus = outcome == .flawlessVictory ? 50.0 : 0
+        experienceEarnedThisRun = Double(score) * 0.5 + flawlessBonus
+
+        let accumulatedExperience = experience + experienceEarnedThisRun
+        if accumulatedExperience >= 100 {
+            level += Int(accumulatedExperience / 100)
+            experience = 0
+        } else {
+            experience = accumulatedExperience
         }
     }
 
@@ -623,6 +650,8 @@ struct AdventureView: View {
         botAnswer = nil
         botAppearance = .random
         hasFinished = false
+        experienceEarnedThisRun = 0
+        experienceAwarded = false
         answerResults = []
     }
 
@@ -672,7 +701,7 @@ struct AdventureView: View {
         return ""
     }
 
-    private enum RunOutcome {
+    private enum RunOutcome: Equatable {
         case flawlessVictory
         case clutch
         case victory
@@ -735,7 +764,9 @@ struct AdventureView: View {
         AdventureView(
             appearance: AvatarAppearance(),
             history: .constant([]),
-            navigationPath: .constant([])
+            navigationPath: .constant([]),
+            level: .constant(1),
+            experience: .constant(0)
         )
     }
 }

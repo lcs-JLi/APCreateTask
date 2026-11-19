@@ -5,6 +5,8 @@ struct ContentView: View {
     @State private var history: [GameRun] = []
     @State private var navigationPath: [AppRoute] = []
     @AppStorage("gameHistoryData") private var historyData = Data()
+    @AppStorage("playerLevel") private var level = 1
+    @AppStorage("playerExperience") private var experience = 0.0
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -12,14 +14,21 @@ struct ContentView: View {
                 .navigationDestination(for: AppRoute.self) { route in
                     switch route {
                     case .gameMenu:
-                        GameMenuView(appearance: $appearance, history: $history)
+                        GameMenuView(
+                            appearance: $appearance,
+                            history: $history,
+                            level: $level,
+                            experience: $experience
+                        )
                     case .subjectSelection:
                         SubjectSelectionView()
                     case .adventure:
                         AdventureView(
                             appearance: appearance,
                             history: $history,
-                            navigationPath: $navigationPath
+                            navigationPath: $navigationPath,
+                            level: $level,
+                            experience: $experience
                         )
                     }
                 }
