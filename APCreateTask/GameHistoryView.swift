@@ -1,6 +1,18 @@
+//
+//  GameHistoryView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main functions: wordPuzzleRunCard, runCard, and answerRow for rendering game history.
+//  Copilot change in this session: added a dismiss-based Back to menu button.
+//
+
 import SwiftUI
 
 struct GameHistoryView: View {
+    @Environment(\.dismiss) private var dismiss
+
     let runs: [GameRun]
     let wordPuzzleRuns: [WordPuzzleRun]
 
@@ -48,6 +60,14 @@ struct GameHistoryView: View {
                             runCard(run, number: runs.count - index)
                         }
                     }
+
+                    Button {
+                        dismiss()
+                    } label: {
+                        returnToMenuLabel
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
                 }
                 .padding(20)
                 .frame(maxWidth: 720)
@@ -55,6 +75,15 @@ struct GameHistoryView: View {
             }
         }
         .navigationTitle("Game History")
+    }
+
+    private var returnToMenuLabel: some View {
+        Label("Back to menu", systemImage: "arrow.left")
+            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Color(red: 0.20, green: 0.48, blue: 0.45), in: Capsule())
     }
 
     private var emptyState: some View {

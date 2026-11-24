@@ -1,3 +1,14 @@
+//
+//  AdventureView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main functions: makeQuestionSet, submitAnswer, moveToNextQuestion, chooseEventChoice,
+//  awardExperience, restartGame, and answer-feedback/accessibility helpers.
+//  Copilot change in this session: renamed the overtime outcome to draw.
+//
+
 import SwiftUI
 
 struct AdventureView: View {
@@ -503,7 +514,7 @@ struct AdventureView: View {
     private var outcome: RunOutcome {
         let scoreDifference = score - botScore
         if scoreDifference == 0 {
-            return .overtime
+            return .draw
         }
         if scoreDifference < 0 {
             return .defeat
@@ -723,7 +734,7 @@ struct AdventureView: View {
         case flawlessVictory
         case clutch
         case victory
-        case overtime
+        case draw
         case defeat
 
         var title: String {
@@ -731,7 +742,7 @@ struct AdventureView: View {
             case .flawlessVictory: "Flawless Victory"
             case .clutch: "Clutch"
             case .victory: "Victory"
-            case .overtime: "Overtime"
+            case .draw: "Draw"
             case .defeat: "Defeat"
             }
         }
@@ -741,7 +752,7 @@ struct AdventureView: View {
             case .flawlessVictory: "sparkles"
             case .clutch: "bolt.fill"
             case .victory: "trophy.fill"
-            case .overtime: "equal.circle.fill"
+            case .draw: "equal.circle.fill"
             case .defeat: "xmark.circle.fill"
             }
         }
@@ -751,7 +762,7 @@ struct AdventureView: View {
             case .flawlessVictory: Color(red: 0.75, green: 0.49, blue: 0.12)
             case .clutch: Color(red: 0.77, green: 0.38, blue: 0.16)
             case .victory: Color(red: 0.20, green: 0.48, blue: 0.35)
-            case .overtime: Color(red: 0.30, green: 0.43, blue: 0.63)
+            case .draw: Color(red: 0.30, green: 0.43, blue: 0.63)
             case .defeat: Color(red: 0.62, green: 0.30, blue: 0.30)
             }
         }
@@ -768,7 +779,7 @@ struct AdventureView: View {
                 "A close win—you won by \(scoreDifference) \(scoreDifference == 1 ? "point" : "points")!"
             case .victory:
                 "You won by \(scoreDifference) points!"
-            case .overtime:
+            case .draw:
                 "It's a tie at \(userScore) points!"
             case .defeat:
                 "Your opponent won this round. Try again!"

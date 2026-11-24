@@ -1,3 +1,13 @@
+//
+//  AvatarAppearance.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main definitions: skin, hairstyle, outfit, equipment, unlock requirements, and displayUsername.
+//  Copilot change in this session: added this summary comment only.
+//
+
 import SwiftUI
 
 enum AvatarUnlockRequirement: Equatable {

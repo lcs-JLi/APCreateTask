@@ -1,3 +1,13 @@
+//
+//  WordPuzzleView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main functions: lettersForRow, tileColor, accessibilityLabel, feedback, submitGuess, and startNewPuzzle.
+//  Copilot change in this session: updated the GameHistoryView initializer call.
+//
+
 import SwiftUI
 
 struct WordPuzzleView: View {
@@ -63,7 +73,10 @@ struct WordPuzzleView: View {
                         Spacer()
 
                         NavigationLink {
-                            GameHistoryView(runs: gameHistory, wordPuzzleRuns: history)
+                            GameHistoryView(
+                                runs: gameHistory,
+                                wordPuzzleRuns: history
+                            )
                         } label: {
                             Label("History", systemImage: "clock.arrow.circlepath")
                                 .font(.system(size: 14, weight: .bold, design: .rounded))

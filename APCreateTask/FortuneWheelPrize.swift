@@ -1,3 +1,12 @@
+//
+//  FortuneWheelPrize.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot.
+//  The existing prize definitions were not changed.
+//
+
 enum FortuneWheelPrize: CaseIterable, Hashable {
     case twoCoins
     case wizard

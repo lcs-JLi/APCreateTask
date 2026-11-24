@@ -1,3 +1,12 @@
+//
+//  FortuneWheelSlice.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot.
+//  The existing wheel slice shape was not changed.
+//
+
 import SwiftUI
 
 struct FortuneWheelSlice: Shape {

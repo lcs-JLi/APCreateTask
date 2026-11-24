@@ -1,3 +1,13 @@
+//
+//  ContentView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main view: body, which configures app navigation and persisted player state.
+//  Copilot change in this session: passed navigationPath to ShopView for its menu button.
+//
+
 import SwiftUI
 
 struct ContentView: View {
@@ -63,7 +73,8 @@ struct ContentView: View {
                         ShopView(
                             level: level,
                             coins: $coins,
-                            unlockedItems: $unlockedAvatarItems
+                            unlockedItems: $unlockedAvatarItems,
+                            navigationPath: $navigationPath
                         )
                     }
                 }

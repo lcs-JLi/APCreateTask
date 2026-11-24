@@ -1,3 +1,12 @@
+//
+//  AvatarShopItem.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot.
+//  The existing shop item definitions were not changed.
+//
+
 enum AvatarShopCategory: String, CaseIterable, Identifiable {
     case skinTone = "Skin Tones"
     case hairstyle = "Hairstyles"

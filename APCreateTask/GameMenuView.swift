@@ -1,3 +1,13 @@
+//
+//  GameMenuView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main functions: body and menuButtonLabel(_:systemImage:color:) for the game menu.
+//  Copilot change in this session: updated the GameHistoryView initializer call.
+//
+
 import SwiftUI
 
 struct GameMenuView: View {
@@ -122,7 +132,10 @@ struct GameMenuView: View {
                             .buttonStyle(.plain)
 
                             NavigationLink {
-                                GameHistoryView(runs: history, wordPuzzleRuns: wordPuzzleHistory)
+                                GameHistoryView(
+                                    runs: history,
+                                    wordPuzzleRuns: wordPuzzleHistory
+                                )
                             } label: {
                                 menuButtonLabel(
                                     "HISTORY",

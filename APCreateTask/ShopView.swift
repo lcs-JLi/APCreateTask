@@ -1,3 +1,13 @@
+//
+//  ShopView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot:
+//  Main functions: wheelSlice, wheelLabel, shopItemCard, purchase, spinWheel, and award.
+//  Copilot change in this session: added a Back to menu button using navigationPath.
+//
+
 import Foundation
 import SwiftUI
 
@@ -7,6 +17,7 @@ struct ShopView: View {
     let level: Int
     @Binding var coins: Int
     @Binding var unlockedItems: Set<String>
+    @Binding var navigationPath: [AppRoute]
 
     @State private var wheelRotation = 0.0
     @State private var isSpinning = false
@@ -68,6 +79,14 @@ struct ShopView: View {
                             }
                         }
                     }
+
+                    Button {
+                        navigationPath = [.gameMenu]
+                    } label: {
+                        returnToMenuLabel
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
                 }
                 .padding(20)
                 .frame(maxWidth: 700)
@@ -75,6 +94,15 @@ struct ShopView: View {
             }
         }
         .navigationTitle("Shop")
+    }
+
+    private var returnToMenuLabel: some View {
+        Label("Back to menu", systemImage: "arrow.left")
+            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Color(red: 0.20, green: 0.48, blue: 0.45), in: Capsule())
     }
 
     private var wheelCard: some View {
@@ -391,6 +419,6 @@ struct ShopView: View {
 
 #Preview {
     NavigationStack {
-        ShopView(level: 1, coins: .constant(6), unlockedItems: .constant([]))
+        ShopView(level: 1, coins: .constant(6), unlockedItems: .constant([]), navigationPath: .constant([]))
     }
 }

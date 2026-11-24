@@ -1,3 +1,12 @@
+//
+//  PlayerRewards.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot.
+//  The existing reward calculations were not changed.
+//
+
 enum PlayerRewards {
     private static let experiencePerCoin = 20.0
 

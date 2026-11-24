@@ -1,3 +1,12 @@
+//
+//  SettingsView.swift
+//  APCreateTask
+//
+//  Created by John Li on 2026-11-20.
+//  This code was generated using GitHub Copilot.
+//  The existing settings implementation was not changed.
+//
+
 import SwiftUI
 
 struct SettingsView: View {
