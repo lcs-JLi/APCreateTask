@@ -28,7 +28,7 @@ struct GameHistoryView: View {
                     }
 
                     if !wordPuzzleRuns.isEmpty {
-                        Text("Word Puzzle")
+                        Text("English")
                             .font(.system(size: 23, weight: .heavy, design: .rounded))
                             .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
                             .accessibilityAddTraits(.isHeader)
@@ -69,7 +69,7 @@ struct GameHistoryView: View {
                 .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Complete a math adventure or word puzzle to see your games here.")
+            Text("Complete a math adventure or English game to see your games here.")
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
@@ -82,7 +82,7 @@ struct GameHistoryView: View {
     private func wordPuzzleRunCard(_ run: WordPuzzleRun, number: Int) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Puzzle \(number)")
+                Text("Run \(number)")
                     .font(.system(size: 20, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
 

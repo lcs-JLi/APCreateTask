@@ -11,10 +11,12 @@ struct WordPuzzleView: View {
 
     let gameHistory: [GameRun]
     @Binding var history: [WordPuzzleRun]
+    @Binding var navigationPath: [AppRoute]
     @Binding var level: Int
     @Binding var experience: Double
     @Binding var coins: Int
     @Binding var coinExperienceProgress: Double
+    let backpackEquipped: Bool
 
     @State private var targetWord = WordPuzzleWordBank.words.randomElement() ?? "apple"
     @State private var guesses: [String] = []
@@ -47,7 +49,7 @@ struct WordPuzzleView: View {
                 VStack(spacing: 20) {
                     HStack {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("WORD QUEST")
+                            Text("ENGLISH")
                                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                                 .tracking(1)
                                 .foregroundStyle(Color(red: 0.49, green: 0.39, blue: 0.56))
@@ -67,7 +69,7 @@ struct WordPuzzleView: View {
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                                 .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
                         }
-                        .accessibilityHint("See your past math games and word puzzles")
+                        .accessibilityHint("See your past math and English games")
                     }
 
                     Text("You have 6 tries. Green means the letter is in the right spot; yellow means it belongs somewhere else.")
@@ -95,7 +97,7 @@ struct WordPuzzleView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle("Word Puzzle")
+        .navigationTitle("English")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
@@ -209,6 +211,18 @@ struct WordPuzzleView: View {
                     .background(Color(red: 0.49, green: 0.39, blue: 0.56), in: Capsule())
             }
             .buttonStyle(.plain)
+
+            Button {
+                navigationPath = [.gameMenu]
+            } label: {
+                Label("Back to menu", systemImage: "arrow.left")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
@@ -293,7 +307,10 @@ struct WordPuzzleView: View {
         message = nil
 
         if guesses.last == targetWord || guesses.count == Self.maximumGuesses {
-            experienceEarnedThisRun = 20
+            experienceEarnedThisRun = PlayerRewards.experienceWithBackpackBonus(
+                75,
+                backpackEquipped: backpackEquipped
+            )
             coinsEarnedThisRun = PlayerRewards.awardExperience(
                 experienceEarnedThisRun,
                 level: &level,
@@ -323,10 +340,12 @@ struct WordPuzzleView: View {
         WordPuzzleView(
             gameHistory: [],
             history: .constant([]),
+            navigationPath: .constant([]),
             level: .constant(1),
             experience: .constant(0),
             coins: .constant(0),
-            coinExperienceProgress: .constant(0)
+            coinExperienceProgress: .constant(0),
+            backpackEquipped: false
         )
     }
 }

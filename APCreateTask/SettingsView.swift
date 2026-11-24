@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Binding var experience: Double
     @Binding var coins: Int
     @Binding var coinExperienceProgress: Double
+    let backpackEquipped: Bool
 
     var body: some View {
         ZStack {
@@ -34,14 +35,14 @@ struct SettingsView: View {
                 CoinBalanceView(coins: coins)
 
                 settingsButton(
-                    "Ex · +1,000 EXP",
+                    "Ex · +100 EXP",
                     systemImage: "sparkles",
                     color: Color(red: 0.20, green: 0.48, blue: 0.45),
                     action: addExperience
                 )
 
                 settingsButton(
-                    "Coins · +1,000",
+                    "Coins · +10",
                     systemImage: "dollarsign.circle.fill",
                     color: Color(red: 0.67, green: 0.48, blue: 0.15),
                     action: addCoins
@@ -80,7 +81,7 @@ struct SettingsView: View {
 
     private func addExperience() {
         PlayerRewards.awardExperience(
-            1_000,
+            PlayerRewards.experienceWithBackpackBonus(100, backpackEquipped: backpackEquipped),
             level: &level,
             experience: &experience,
             coins: &coins,
@@ -89,7 +90,7 @@ struct SettingsView: View {
     }
 
     private func addCoins() {
-        coins += 1_000
+        coins += 10
     }
 }
 
@@ -99,7 +100,8 @@ struct SettingsView: View {
             level: .constant(1),
             experience: .constant(0),
             coins: .constant(0),
-            coinExperienceProgress: .constant(0)
+            coinExperienceProgress: .constant(0),
+            backpackEquipped: false
         )
     }
 }

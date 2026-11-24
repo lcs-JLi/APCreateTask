@@ -10,6 +10,7 @@ struct GameMenuView: View {
     @Binding var experience: Double
     @Binding var coins: Int
     @Binding var coinExperienceProgress: Double
+    @Binding var unlockedItems: Set<String>
     @State private var showsResetConfirmation = false
 
     var body: some View {
@@ -55,6 +56,24 @@ struct GameMenuView: View {
                         VStack(spacing: 2) {
                             AvatarPreview(appearance: appearance)
                                 .frame(width: 152, height: 180)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(avatarDescription)
+                                .overlay(alignment: .top) {
+                                    Button {
+                                        dismiss()
+                                    } label: {
+                                        Label("Avatar", systemImage: "person.crop.square.fill")
+                                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                            .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 7)
+                                            .frame(minHeight: 44)
+                                            .background(.white.opacity(0.96), in: Capsule())
+                                            .contentShape(Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .offset(y: 5)
+                                }
                                 .scaleEffect(avatarScale)
                                 .frame(width: avatarWidth, height: 180, alignment: .bottomLeading)
 
@@ -65,8 +84,6 @@ struct GameMenuView: View {
                                 .minimumScaleFactor(0.7)
                         }
                         .frame(width: avatarWidth)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(avatarDescription)
 
                         Spacer(minLength: spacing)
 
@@ -80,19 +97,21 @@ struct GameMenuView: View {
                             }
                             .buttonStyle(.plain)
 
-                            Button {
-                                dismiss()
-                            } label: {
+                            NavigationLink(value: AppRoute.shop) {
                                 menuButtonLabel(
-                                    "AVATAR",
-                                    systemImage: "person.crop.square.fill",
-                                    color: Color(red: 0.37, green: 0.53, blue: 0.48)
+                                    "SHOP",
+                                    systemImage: "bag.fill",
+                                    color: Color(red: 0.49, green: 0.39, blue: 0.56)
                                 )
                             }
                             .buttonStyle(.plain)
 
                             NavigationLink {
-                                EquipmentView(appearance: $appearance)
+                                EquipmentView(
+                                    appearance: $appearance,
+                                    unlockedItems: $unlockedItems,
+                                    coins: $coins
+                                )
                             } label: {
                                 menuButtonLabel(
                                     "EQUIPMENT",
@@ -118,7 +137,8 @@ struct GameMenuView: View {
                                     level: $level,
                                     experience: $experience,
                                     coins: $coins,
-                                    coinExperienceProgress: $coinExperienceProgress
+                                    coinExperienceProgress: $coinExperienceProgress,
+                                    backpackEquipped: appearance.equippedEquipment.contains(.backpack)
                                 )
                             } label: {
                                 menuButtonLabel(
@@ -139,7 +159,9 @@ struct GameMenuView: View {
                                 )
                             }
                             .buttonStyle(.plain)
-                            .accessibilityHint("Reset your username, experience, level, and coins")
+                            .accessibilityHint(
+                                "Reset your avatar, experience, level, coins, unlocked items, and game history"
+                            )
 
                             Button {} label: {
                                 menuButtonLabel(
@@ -166,15 +188,18 @@ struct GameMenuView: View {
             titleVisibility: .visible
         ) {
             Button("Reset profile", role: .destructive) {
-                appearance.username = ""
+                appearance = AvatarAppearance()
                 experience = 0
                 level = 1
                 coins = 0
                 coinExperienceProgress = 0
+                unlockedItems.removeAll()
+                history.removeAll()
+                wordPuzzleHistory.removeAll()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This clears your username and coins, and resets your experience and level.")
+            Text("This resets your avatar, coins, experience, level, unlocked items, and all game history.")
         }
     }
 
@@ -214,7 +239,8 @@ struct GameMenuView: View {
             level: .constant(1),
             experience: .constant(0),
             coins: .constant(0),
-            coinExperienceProgress: .constant(0)
+            coinExperienceProgress: .constant(0),
+            unlockedItems: .constant([])
         )
     }
 }

@@ -148,7 +148,7 @@ struct AvatarPreview: View {
                 path.addLine(to: CGPoint(x: 94, y: 72))
                 path.addLine(to: CGPoint(x: 6, y: 72))
                 path.closeSubpath()
-            case .tee, .hoodie, .superhero:
+            case .tee, .hoodie, .superhero, .spaceSuit, .raincoat, .wizard:
                 path.move(to: CGPoint(x: 18, y: 72))
                 path.addLine(to: CGPoint(x: 14, y: 30))
                 path.addQuadCurve(
@@ -199,6 +199,25 @@ struct AvatarPreview: View {
         case .superhero:
             Image(systemName: "bolt.fill")
                 .font(.system(size: 25, weight: .black))
+                .foregroundStyle(Color(red: 1.00, green: 0.82, blue: 0.24))
+                .offset(y: -3)
+        case .spaceSuit:
+            Image(systemName: "sparkles")
+                .font(.system(size: 23, weight: .black))
+                .foregroundStyle(.white)
+                .offset(y: -3)
+        case .raincoat:
+            VStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { _ in
+                    Circle()
+                        .fill(Color(red: 0.98, green: 0.80, blue: 0.24))
+                        .frame(width: 5, height: 5)
+                }
+            }
+            .offset(y: 8)
+        case .wizard:
+            Image(systemName: "star.fill")
+                .font(.system(size: 22, weight: .black))
                 .foregroundStyle(Color(red: 1.00, green: 0.82, blue: 0.24))
                 .offset(y: -3)
         }
@@ -260,6 +279,46 @@ struct AvatarPreview: View {
                     .frame(width: 7, height: 7)
             }
             .offset(x: 29, y: -45)
+        case .ponytail:
+            ZStack {
+                Circle()
+                    .fill(hairColor)
+                    .frame(width: 28, height: 28)
+                    .offset(x: 32, y: -42)
+                HStack(spacing: -5) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        Circle()
+                            .fill(hairColor)
+                            .frame(width: 20, height: 20)
+                    }
+                }
+                .offset(y: -51)
+            }
+        case .spiky:
+            HStack(spacing: -5) {
+                ForEach(0..<5, id: \.self) { index in
+                    Image(systemName: "triangle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 24)
+                        .rotationEffect(.degrees(Double(index - 2) * 12))
+                }
+            }
+            .foregroundStyle(hairColor)
+            .offset(y: -53)
+        case .braids:
+            HStack(spacing: 22) {
+                ForEach(0..<2, id: \.self) { _ in
+                    VStack(spacing: -6) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            Capsule()
+                                .fill(hairColor)
+                                .frame(width: 13, height: 17)
+                        }
+                    }
+                }
+            }
+            .offset(y: -22)
         }
     }
 
@@ -269,6 +328,9 @@ struct AvatarPreview: View {
         case .hoodie: Color(red: 0.92, green: 0.48, blue: 0.27)
         case .dress: Color(red: 0.62, green: 0.43, blue: 0.70)
         case .superhero: Color(red: 0.29, green: 0.43, blue: 0.70)
+        case .spaceSuit: Color(red: 0.29, green: 0.49, blue: 0.70)
+        case .raincoat: Color(red: 0.92, green: 0.70, blue: 0.18)
+        case .wizard: Color(red: 0.38, green: 0.30, blue: 0.63)
         }
     }
 }

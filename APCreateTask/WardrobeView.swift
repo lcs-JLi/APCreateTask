@@ -3,6 +3,9 @@ import SwiftUI
 struct WardrobeView: View {
     @Binding var appearance: AvatarAppearance
     @Binding var history: [GameRun]
+    @Binding var level: Int
+    @Binding var coins: Int
+    @Binding var unlockedItems: Set<String>
     @State private var selectedCategory: Category = .outfit
 
     private enum Category: String, CaseIterable, Identifiable {
@@ -180,16 +183,22 @@ struct WardrobeView: View {
     private var options: some View {
         switch selectedCategory {
         case .skin:
-            HStack(spacing: 12) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], spacing: 8) {
                 ForEach(AvatarAppearance.SkinTone.allCases) { tone in
+                    let isLocked = !isUnlocked(
+                        requirement: tone.unlockRequirement,
+                        inventoryID: tone.inventoryID
+                    )
+
                     Button {
+                        guard !isLocked else { return }
                         appearance.skinTone = tone
                     } label: {
-                        Circle()
-                            .fill(tone.color)
-                            .frame(width: 42, height: 42)
-                            .padding(4)
-                            .overlay {
+                        VStack(spacing: 5) {
+                            ZStack {
+                                Circle()
+                                    .fill(tone.color)
+
                                 Circle()
                                     .strokeBorder(
                                         appearance.skinTone == tone
@@ -197,34 +206,78 @@ struct WardrobeView: View {
                                             : .clear,
                                         lineWidth: 3
                                     )
+
+                                if isLocked {
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(.white)
+                                        .padding(5)
+                                        .background(.black.opacity(0.55), in: Circle())
+                                }
                             }
-                            .frame(maxWidth: .infinity)
+                            .frame(width: 50, height: 50)
+
+                            Text(tone.name)
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .lineLimit(1)
+
+                            if isLocked {
+                                Text(lockLabel(for: tone.unlockRequirement))
+                                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 82)
+                        .background(
+                            appearance.skinTone == tone
+                                ? Color(red: 0.89, green: 0.96, blue: 0.92)
+                                : .white,
+                            in: RoundedRectangle(cornerRadius: 14)
+                        )
                     }
                     .buttonStyle(.plain)
+                    .disabled(isLocked)
                     .accessibilityLabel("\(tone.name) skin tone")
-                    .accessibilityValue(appearance.skinTone == tone ? "Selected" : "")
+                    .accessibilityValue(
+                        isLocked
+                            ? lockLabel(for: tone.unlockRequirement)
+                            : appearance.skinTone == tone ? "Selected" : ""
+                    )
                 }
             }
-            .padding(.vertical, 6)
         case .hair:
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 10)], spacing: 10) {
                 ForEach(AvatarAppearance.Hairstyle.allCases) { style in
+                    let isLocked = !isUnlocked(
+                        requirement: style.unlockRequirement,
+                        inventoryID: style.inventoryID
+                    )
+
                     optionButton(
                         symbol: style.symbol,
                         title: style.name,
-                        isSelected: appearance.hairstyle == style
+                        isSelected: appearance.hairstyle == style,
+                        isLocked: isLocked,
+                        lockLabel: lockLabel(for: style.unlockRequirement)
                     ) {
                         appearance.hairstyle = style
                     }
                 }
             }
         case .outfit:
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 10)], spacing: 10) {
                 ForEach(AvatarAppearance.Outfit.allCases) { outfit in
+                    let isLocked = !isUnlocked(
+                        requirement: outfit.unlockRequirement,
+                        inventoryID: outfit.inventoryID
+                    )
+
                     optionButton(
                         symbol: outfit.symbol,
                         title: outfit.name,
-                        isSelected: appearance.outfit == outfit
+                        isSelected: appearance.outfit == outfit,
+                        isLocked: isLocked,
+                        lockLabel: lockLabel(for: outfit.unlockRequirement)
                     ) {
                         appearance.outfit = outfit
                     }
@@ -237,6 +290,8 @@ struct WardrobeView: View {
         symbol: String,
         title: String,
         isSelected: Bool,
+        isLocked: Bool,
+        lockLabel: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -248,9 +303,15 @@ struct WardrobeView: View {
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
+                if isLocked {
+                    Label(lockLabel, systemImage: "lock.fill")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 68)
+            .frame(height: isLocked ? 84 : 68)
             .background(
                 isSelected ? Color(red: 0.89, green: 0.96, blue: 0.92) : .white,
                 in: RoundedRectangle(cornerRadius: 15)
@@ -265,8 +326,32 @@ struct WardrobeView: View {
             .foregroundStyle(Color(red: 0.17, green: 0.28, blue: 0.31))
         }
         .buttonStyle(.plain)
+        .disabled(isLocked)
         .accessibilityLabel(title)
-        .accessibilityValue(isSelected ? "Selected" : "")
+        .accessibilityValue(isLocked ? lockLabel : isSelected ? "Selected" : "")
+    }
+
+    private func isUnlocked(
+        requirement: AvatarUnlockRequirement?,
+        inventoryID: String
+    ) -> Bool {
+        guard let requirement else { return true }
+
+        switch requirement {
+        case .level(let requiredLevel):
+            return level >= requiredLevel
+        case .coins, .fortunateWheel:
+            return unlockedItems.contains(inventoryID)
+        }
+    }
+
+    private func lockLabel(for requirement: AvatarUnlockRequirement?) -> String {
+        switch requirement {
+        case .level(let requiredLevel): "Lv. \(requiredLevel)"
+        case .coins(let amount): "\(amount) coins in Shop"
+        case .fortunateWheel: "Fortune Wheel"
+        case nil: ""
+        }
     }
 
     private var startButton: some View {
@@ -281,6 +366,7 @@ struct WardrobeView: View {
             .frame(height: 58)
             .background(Color(red: 0.20, green: 0.48, blue: 0.45), in: Capsule())
             .shadow(color: Color(red: 0.14, green: 0.35, blue: 0.33).opacity(0.24), radius: 9, y: 5)
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityHint("Continue to the game menu")
@@ -294,6 +380,12 @@ struct WardrobeView: View {
 
 #Preview {
     NavigationStack {
-        WardrobeView(appearance: .constant(AvatarAppearance()), history: .constant([]))
+        WardrobeView(
+            appearance: .constant(AvatarAppearance()),
+            history: .constant([]),
+            level: .constant(1),
+            coins: .constant(0),
+            unlockedItems: .constant([])
+        )
     }
 }

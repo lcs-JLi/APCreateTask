@@ -4,6 +4,8 @@ struct EquipmentView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Binding var appearance: AvatarAppearance
+    @Binding var unlockedItems: Set<String>
+    @Binding var coins: Int
 
     private let columns = [GridItem(.adaptive(minimum: 135), spacing: 12)]
 
@@ -21,6 +23,8 @@ struct EquipmentView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    CoinBalanceView(coins: coins)
+
                     Text("Choose your gear")
                         .font(.system(size: 28, weight: .heavy, design: .rounded))
                         .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
@@ -80,8 +84,23 @@ struct EquipmentView: View {
 
     private func equipmentButton(_ item: AvatarAppearance.Equipment) -> some View {
         let isEquipped = appearance.equippedEquipment.contains(item)
+        let isUnlocked = item.unlockRequirement == nil || unlockedItems.contains(item.inventoryID)
+        let purchaseCost: Int?
+        if case let .coins(cost)? = item.unlockRequirement {
+            purchaseCost = cost
+        } else {
+            purchaseCost = nil
+        }
+        let canPurchase = purchaseCost.map { coins >= $0 } ?? false
 
         return Button {
+            if !isUnlocked {
+                guard let purchaseCost, canPurchase else { return }
+                coins -= purchaseCost
+                unlockedItems.insert(item.inventoryID)
+                return
+            }
+
             if isEquipped {
                 appearance.equippedEquipment.remove(item)
             } else {
@@ -102,7 +121,11 @@ struct EquipmentView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
-                Text(isEquipped ? "Equipped" : "Tap to equip")
+                Text(
+                    !isUnlocked
+                        ? purchaseCost.map { "Buy for \($0) coins" } ?? "Locked"
+                        : isEquipped ? "Equipped" : "Tap to equip"
+                )
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(
                         isEquipped
@@ -124,14 +147,23 @@ struct EquipmentView: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(!isUnlocked && !canPurchase)
         .accessibilityLabel("\(item.name). \(item.effectDescription)")
-        .accessibilityValue(isEquipped ? "Equipped" : "Not equipped")
-        .accessibilityHint("Toggle this item for your avatar")
+        .accessibilityValue(
+            !isUnlocked
+                ? (canPurchase ? "Costs \(purchaseCost ?? 0) coins" : "Not enough coins")
+                : isEquipped ? "Equipped" : "Not equipped"
+        )
+        .accessibilityHint(isUnlocked ? "Toggle this item for your avatar" : "Purchase this equipment")
     }
 }
 
 #Preview {
     NavigationStack {
-        EquipmentView(appearance: .constant(AvatarAppearance()))
+        EquipmentView(
+            appearance: .constant(AvatarAppearance()),
+            unlockedItems: .constant([]),
+            coins: .constant(10)
+        )
     }
 }

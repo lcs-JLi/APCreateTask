@@ -634,7 +634,11 @@ struct AdventureView: View {
         experienceAwarded = true
 
         let flawlessBonus = outcome == .flawlessVictory ? 50.0 : 0
-        experienceEarnedThisRun = Double(score) * 0.5 + flawlessBonus
+        let baseExperience = Double(score) * 0.5 + flawlessBonus
+        experienceEarnedThisRun = PlayerRewards.experienceWithBackpackBonus(
+            baseExperience,
+            backpackEquipped: appearance.equippedEquipment.contains(.backpack)
+        )
 
         coinsEarnedThisRun = PlayerRewards.awardExperience(
             experienceEarnedThisRun,

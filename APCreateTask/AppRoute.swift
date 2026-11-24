@@ -3,4 +3,5 @@ enum AppRoute: Hashable {
     case subjectSelection
     case adventure
     case wordPuzzle
+    case shop
 }

@@ -1,6 +1,10 @@
 enum PlayerRewards {
     private static let experiencePerCoin = 20.0
 
+    static func experienceWithBackpackBonus(_ earned: Double, backpackEquipped: Bool) -> Double {
+        backpackEquipped ? earned * 1.3 : earned
+    }
+
     @discardableResult
     static func awardExperience(
         _ earned: Double,

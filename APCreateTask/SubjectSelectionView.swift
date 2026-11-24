@@ -1,6 +1,11 @@
 import SwiftUI
 
 struct SubjectSelectionView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let level: Int
+    @State private var showsEnglishLockMessage = false
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -29,11 +34,36 @@ struct SubjectSelectionView: View {
                 }
                 .buttonStyle(.plain)
 
-                NavigationLink(value: AppRoute.wordPuzzle) {
+                if level >= 5 {
+                    NavigationLink(value: AppRoute.wordPuzzle) {
+                        subjectButton(
+                            "English",
+                            systemImage: "book.fill",
+                            color: Color(red: 0.49, green: 0.39, blue: 0.56)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        showsEnglishLockMessage = true
+                    } label: {
+                        subjectButton(
+                            "English",
+                            systemImage: "lock.fill",
+                            color: Color(red: 0.44, green: 0.49, blue: 0.55)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Reach level 5 to unlock English")
+                }
+
+                Button {
+                    dismiss()
+                } label: {
                     subjectButton(
-                        "English",
-                        systemImage: "textformat.abc",
-                        color: Color(red: 0.49, green: 0.39, blue: 0.56)
+                        "Back to menu",
+                        systemImage: "arrow.left",
+                        color: Color(red: 0.42, green: 0.48, blue: 0.53)
                     )
                 }
                 .buttonStyle(.plain)
@@ -41,6 +71,11 @@ struct SubjectSelectionView: View {
             .padding(24)
             .frame(maxWidth: 480)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .alert("English is locked", isPresented: $showsEnglishLockMessage) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Reach level 5 to play English.")
         }
     }
 
@@ -55,5 +90,6 @@ struct SubjectSelectionView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 64)
             .background(color, in: RoundedRectangle(cornerRadius: 20))
+            .contentShape(RoundedRectangle(cornerRadius: 20))
     }
 }
