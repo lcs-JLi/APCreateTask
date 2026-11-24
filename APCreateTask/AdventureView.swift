@@ -29,6 +29,8 @@ struct AdventureView: View {
     @Binding var navigationPath: [AppRoute]
     @Binding var level: Int
     @Binding var experience: Double
+    @Binding var coins: Int
+    @Binding var coinExperienceProgress: Double
 
     @State private var questionIndex = 0
     @State private var selectedAnswer: Int?
@@ -47,6 +49,7 @@ struct AdventureView: View {
     @State private var botAppearance = AvatarAppearance.random
     @State private var hasFinished = false
     @State private var experienceEarnedThisRun = 0.0
+    @State private var coinsEarnedThisRun = 0
     @State private var experienceAwarded = false
     @State private var questions = Self.makeQuestionSet()
     @State private var answerResults: [GameQuestionResult] = []
@@ -475,6 +478,16 @@ struct AdventureView: View {
                 earnedThisRun: experienceEarnedThisRun
             )
 
+            HStack(spacing: 12) {
+                CoinBalanceView(coins: coins)
+                Label(
+                    "+\(coinsEarnedThisRun) \(coinsEarnedThisRun == 1 ? "coin" : "coins")",
+                    systemImage: "dollarsign.circle.fill"
+                )
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(red: 0.67, green: 0.48, blue: 0.15))
+            }
+
             resultActions
         }
         .padding(24)
@@ -623,12 +636,13 @@ struct AdventureView: View {
         let flawlessBonus = outcome == .flawlessVictory ? 50.0 : 0
         experienceEarnedThisRun = Double(score) * 0.5 + flawlessBonus
 
-        var accumulatedExperience = experience + experienceEarnedThisRun
-        while accumulatedExperience >= 100 {
-            level += 1
-            accumulatedExperience -= 100
-        }
-        experience = accumulatedExperience
+        coinsEarnedThisRun = PlayerRewards.awardExperience(
+            experienceEarnedThisRun,
+            level: &level,
+            experience: &experience,
+            coins: &coins,
+            coinExperienceProgress: &coinExperienceProgress
+        )
     }
 
     private func restartGame() {
@@ -650,6 +664,7 @@ struct AdventureView: View {
         botAppearance = .random
         hasFinished = false
         experienceEarnedThisRun = 0
+        coinsEarnedThisRun = 0
         experienceAwarded = false
         answerResults = []
     }
@@ -765,7 +780,9 @@ struct AdventureView: View {
             history: .constant([]),
             navigationPath: .constant([]),
             level: .constant(1),
-            experience: .constant(0)
+            experience: .constant(0),
+            coins: .constant(0),
+            coinExperienceProgress: .constant(0)
         )
     }
 }

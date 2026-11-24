@@ -1,10 +1,15 @@
 import SwiftUI
 
 struct GameMenuView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @Binding var appearance: AvatarAppearance
     @Binding var history: [GameRun]
+    @Binding var wordPuzzleHistory: [WordPuzzleRun]
     @Binding var level: Int
     @Binding var experience: Double
+    @Binding var coins: Int
+    @Binding var coinExperienceProgress: Double
     @State private var showsResetConfirmation = false
 
     var body: some View {
@@ -36,7 +41,11 @@ struct GameMenuView: View {
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, 28)
 
-                    ExperienceProgressView(level: level, experience: experience)
+                    HStack(spacing: 10) {
+                        ExperienceProgressView(level: level, experience: experience)
+                            .frame(maxWidth: .infinity)
+                        CoinBalanceView(coins: coins)
+                    }
                         .padding(.horizontal, horizontalPadding)
                         .frame(maxWidth: 560)
 
@@ -71,6 +80,17 @@ struct GameMenuView: View {
                             }
                             .buttonStyle(.plain)
 
+                            Button {
+                                dismiss()
+                            } label: {
+                                menuButtonLabel(
+                                    "AVATAR",
+                                    systemImage: "person.crop.square.fill",
+                                    color: Color(red: 0.37, green: 0.53, blue: 0.48)
+                                )
+                            }
+                            .buttonStyle(.plain)
+
                             NavigationLink {
                                 EquipmentView(appearance: $appearance)
                             } label: {
@@ -83,12 +103,28 @@ struct GameMenuView: View {
                             .buttonStyle(.plain)
 
                             NavigationLink {
-                                GameHistoryView(runs: history)
+                                GameHistoryView(runs: history, wordPuzzleRuns: wordPuzzleHistory)
                             } label: {
                                 menuButtonLabel(
                                     "HISTORY",
                                     systemImage: "clock.arrow.circlepath",
                                     color: Color(red: 0.49, green: 0.39, blue: 0.56)
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            NavigationLink {
+                                SettingsView(
+                                    level: $level,
+                                    experience: $experience,
+                                    coins: $coins,
+                                    coinExperienceProgress: $coinExperienceProgress
+                                )
+                            } label: {
+                                menuButtonLabel(
+                                    "SETTINGS",
+                                    systemImage: "gearshape.fill",
+                                    color: Color(red: 0.42, green: 0.48, blue: 0.53)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -103,7 +139,7 @@ struct GameMenuView: View {
                                 )
                             }
                             .buttonStyle(.plain)
-                            .accessibilityHint("Reset your username, experience, and level")
+                            .accessibilityHint("Reset your username, experience, level, and coins")
 
                             Button {} label: {
                                 menuButtonLabel(
@@ -133,10 +169,12 @@ struct GameMenuView: View {
                 appearance.username = ""
                 experience = 0
                 level = 1
+                coins = 0
+                coinExperienceProgress = 0
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This clears your username and resets your experience and level.")
+            Text("This clears your username and coins, and resets your experience and level.")
         }
     }
 
@@ -172,8 +210,11 @@ struct GameMenuView: View {
         GameMenuView(
             appearance: .constant(AvatarAppearance()),
             history: .constant([]),
+            wordPuzzleHistory: .constant([]),
             level: .constant(1),
-            experience: .constant(0)
+            experience: .constant(0),
+            coins: .constant(0),
+            coinExperienceProgress: .constant(0)
         )
     }
 }

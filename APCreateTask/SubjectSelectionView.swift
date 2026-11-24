@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct SubjectSelectionView: View {
-    @State private var showsEnglishLockMessage = false
-
     var body: some View {
         ZStack {
             LinearGradient(
@@ -31,26 +29,18 @@ struct SubjectSelectionView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button {
-                    showsEnglishLockMessage = true
-                } label: {
+                NavigationLink(value: AppRoute.wordPuzzle) {
                     subjectButton(
                         "English",
-                        systemImage: "lock.fill",
-                        color: Color(red: 0.44, green: 0.49, blue: 0.55)
+                        systemImage: "textformat.abc",
+                        color: Color(red: 0.49, green: 0.39, blue: 0.56)
                     )
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("Available after level 10")
             }
             .padding(24)
             .frame(maxWidth: 480)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .alert("English is locked", isPresented: $showsEnglishLockMessage) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Available after Lv. 10")
         }
     }
 

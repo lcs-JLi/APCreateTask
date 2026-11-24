@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GameHistoryView: View {
     let runs: [GameRun]
+    let wordPuzzleRuns: [WordPuzzleRun]
 
     var body: some View {
         ZStack {
@@ -22,9 +23,27 @@ struct GameHistoryView: View {
                         .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
                         .accessibilityAddTraits(.isHeader)
 
-                    if runs.isEmpty {
+                    if runs.isEmpty && wordPuzzleRuns.isEmpty {
                         emptyState
-                    } else {
+                    }
+
+                    if !wordPuzzleRuns.isEmpty {
+                        Text("Word Puzzle")
+                            .font(.system(size: 23, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                            .accessibilityAddTraits(.isHeader)
+
+                        ForEach(Array(wordPuzzleRuns.reversed().enumerated()), id: \.element.id) { index, run in
+                            wordPuzzleRunCard(run, number: wordPuzzleRuns.count - index)
+                        }
+                    }
+
+                    if !runs.isEmpty {
+                        Text("Math Adventures")
+                            .font(.system(size: 23, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+                            .accessibilityAddTraits(.isHeader)
+
                         ForEach(Array(runs.reversed().enumerated()), id: \.element.id) { index, run in
                             runCard(run, number: runs.count - index)
                         }
@@ -50,7 +69,7 @@ struct GameHistoryView: View {
                 .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Complete a math adventure to see your answers here.")
+            Text("Complete a math adventure or word puzzle to see your games here.")
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
@@ -58,6 +77,43 @@ struct GameHistoryView: View {
         .frame(maxWidth: .infinity)
         .padding(28)
         .background(.white.opacity(0.94), in: RoundedRectangle(cornerRadius: 26))
+    }
+
+    private func wordPuzzleRunCard(_ run: WordPuzzleRun, number: Int) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Puzzle \(number)")
+                    .font(.system(size: 20, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color(red: 0.15, green: 0.26, blue: 0.30))
+
+                Spacer()
+
+                Text(run.completedAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(run.didWin
+                 ? "Solved in \(run.guesses.count) \(run.guesses.count == 1 ? "guess" : "guesses")"
+                 : "Not solved in \(run.guesses.count) guesses")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(Color(red: 0.20, green: 0.48, blue: 0.45))
+
+            Text("Answer: \(run.word)")
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(red: 0.55, green: 0.40, blue: 0.09))
+
+            Divider()
+
+            Text("Your guesses: \(run.guesses.map { $0.uppercased() }.joined(separator: ", "))")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(Color(red: 0.33, green: 0.42, blue: 0.44))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white.opacity(0.94), in: RoundedRectangle(cornerRadius: 24))
+        .shadow(color: Color(red: 0.33, green: 0.43, blue: 0.37).opacity(0.08), radius: 12, y: 6)
     }
 
     private func runCard(_ run: GameRun, number: Int) -> some View {
@@ -129,6 +185,6 @@ struct GameHistoryView: View {
 
 #Preview {
     NavigationStack {
-        GameHistoryView(runs: [])
+        GameHistoryView(runs: [], wordPuzzleRuns: [])
     }
 }
